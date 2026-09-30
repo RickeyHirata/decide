@@ -65,4 +65,4 @@ Supabase CLIとDocker互換環境がある場合は `npm run test:db` を使い�
 
 ## 再現可能な依存インストール
 
-Node.js 24を使用し、リポジトリ直下で `npm ci` を実行してください。依存変更時は `npm install` でlockfileも更新します。Codex起動失敗の切り分けは `docs/17-container-diagnosis.md` を参照してください。
+Node.js 24を使用し、リポジトリ直下で `npm ci` を実行してください。`.nvmrc` でも24を指定しています。依存変更時は `npm install` でlockfileも更新します。Codex起動失敗の切り分けは `docs/17-container-diagnosis.md` を参照してください。
