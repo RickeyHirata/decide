@@ -62,3 +62,7 @@ npm run typecheck
 ```
 
 Supabase CLIとDocker互換環境がある場合は `npm run test:db` を使います。環境値は `.env.example` を参照してください。値がない間は、画面に「ローカルデモ」と明示した決定的fixtureだけを使用します。実装範囲・実行結果・外部設定待ちは `IMPLEMENTATION_STATUS.md` に記録しています。
+
+## 再現可能な依存インストール
+
+Node.js 24を使用し、リポジトリ直下で `npm ci` を実行してください。依存変更時は `npm install` でlockfileも更新します。Codex起動失敗の切り分けは `docs/17-container-diagnosis.md` を参照してください。

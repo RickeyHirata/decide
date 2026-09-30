@@ -28,3 +28,6 @@ This is an implementation start, not a completed or deployed application.
 ## External setup waiting
 
 Supabase project values, Apple/Google OAuth values, public web/API domains, Expo/EAS and APNs/FCM configuration, AI moderation provider, and the operational/legal values listed in `docs/14-setup-release.md` are not supplied. Demo mode must be disabled and the server must fail closed before any non-local release.
+
+## 2026-10-01 Setup repair
+Dependency resolution, app TypeScript configuration, and Web build repaired; see docs/17-container-diagnosis.md for evidence and remaining Cloud uncertainty. This does not advance functional milestones or claim Cloud container recovery.
