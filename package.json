@@ -1,0 +1,20 @@
+{
+  "name": "decide",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.4.2",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev:mobile": "npm --workspace @decide/mobile run start",
+    "dev:web": "npm --workspace @decide/web run dev",
+    "typecheck": "tsc -p tsconfig.json && npm --workspace @decide/mobile run typecheck && npm --workspace @decide/web run typecheck",
+    "test:unit": "node --experimental-strip-types --test tests/*.test.mjs",
+    "test:db": "bash tools/test-db.sh",
+    "test:e2e": "npm --workspace @decide/web run test:e2e",
+    "build:web": "npm --workspace @decide/web run build",
+    "check": "npm run typecheck && npm run test:unit"
+  },
+  "devDependencies": {
+    "typescript": "6.0.2"
+  }
+}

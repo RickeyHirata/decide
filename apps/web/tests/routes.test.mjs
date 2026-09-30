@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
+test('guest invite has unavailable projection and labelled demo',()=>{const route=fs.readFileSync(new URL('../app/i/[token]/page.tsx',import.meta.url),'utf8');const vote=fs.readFileSync(new URL('../app/i/[token]/vote.tsx',import.meta.url),'utf8');assert.match(route,/この相談は表示できません/);assert.match(vote,/ローカルデモ/);assert.doesNotMatch(vote,/authorId|inviteToken/)});

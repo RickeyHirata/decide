@@ -1,0 +1,2 @@
+import { Link } from 'expo-router';import { Text } from 'react-native';import { DemoBanner, Screen, s } from '../../src/ui';
+export default function Success(){return <Screen><DemoBanner/><Text style={s.title}>内容を確認しています</Text><Text style={[s.body,{marginTop:14}]}>審査が完了すると相談が公開され、締切のカウントが始まります。</Text><Link href="/decision/demo-coat" style={{marginTop:24,textDecorationLine:'underline'}}>デモの相談詳細を見る</Link></Screen>}
