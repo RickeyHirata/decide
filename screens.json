@@ -1,0 +1,233 @@
+[
+  {
+    "id": "S01",
+    "name": "開始",
+    "route": "/welcome",
+    "content": "短い説明、Apple/Google、公開相談を見る",
+    "rules": "初回Push/連絡先/DNA入力要求なし"
+  },
+  {
+    "id": "S02",
+    "name": "登録の仕上げ",
+    "route": "/onboarding",
+    "content": "表示名・@ID、任意写真、規約版同意、18歳以上のベータ条件確認",
+    "rules": "provider情報を補完、自己紹介等は後で可。キャンセルでゲストの元投稿へ"
+  },
+  {
+    "id": "S03",
+    "name": "友達ホーム",
+    "route": "/(tabs)/home",
+    "content": "未回答→期限→関係性→新しさ、本人対応1行、友達の決断",
+    "rules": "友達0人では相談作成・公開を見る。架空の反応を混ぜない"
+  },
+  {
+    "id": "S04",
+    "name": "発見",
+    "route": "同ルート?feed=discover",
+    "content": "公開の大きい1列カード、カテゴリ入口",
+    "rules": "R2でおすすめ/フォロー中、R1はおすすめのみ"
+  },
+  {
+    "id": "S05",
+    "name": "相談を書く",
+    "route": "/compose",
+    "content": "質問・A/B・写真・補足、「次へ」",
+    "rules": "80/30/300、下書き、写真片側可、AIカテゴリ選択なし"
+  },
+  {
+    "id": "S06",
+    "name": "投稿前確認",
+    "route": "/compose/confirm",
+    "content": "質問A/Bの要約、公開・期限・方式の設定要約、「相談する」",
+    "rules": "2画面目。設定は折りたたみ。15分・選択友達もここ"
+  },
+  {
+    "id": "S07",
+    "name": "受付・共有",
+    "route": "/compose/success/[id]",
+    "content": "審査状態、公開後にリンク共有/詳細",
+    "rules": "審査中は「確認中」。visibleで共有有効"
+  },
+  {
+    "id": "S08",
+    "name": "相談詳細",
+    "route": "/decision/[id]",
+    "content": "作者・質問・A/B・補足・追記・状態別CTA",
+    "rules": "owner/unvoted/mutable/locked/closed/final/reviewedを分ける"
+  },
+  {
+    "id": "S09",
+    "name": "投票後",
+    "route": "S08内の状態",
+    "content": "自分の選択枠、「この投票で確定して結果を見る」、変更、ひとこと",
+    "rules": "結果は確定後。5分を強制待機する画面にしない"
+  },
+  {
+    "id": "S10",
+    "name": "最終決断",
+    "route": "/decision/[id]/decide",
+    "content": "A/B/neither/undecided、記録",
+    "rules": "作者のみ。未決定は保留で完了演出なし"
+  },
+  {
+    "id": "S11",
+    "name": "その後",
+    "route": "/decision/[id]/outcome",
+    "content": "80字と1写真、保存/削除",
+    "rules": "最終決断済み作者のみ。元A/B写真は変更しない"
+  },
+  {
+    "id": "S12",
+    "name": "振り返り",
+    "route": "/decision/[id]/review",
+    "content": "選択結果、満足度1〜10、任意メモ、保存",
+    "rules": "初期null、延期/今回は振り返らない。最新版を表示"
+  },
+  {
+    "id": "S13",
+    "name": "通知",
+    "route": "/(tabs)/notifications",
+    "content": "対応が必要/お知らせ",
+    "rules": "Badge=未解消の対応件数、既読数とは別"
+  },
+  {
+    "id": "S14",
+    "name": "自分のプロフィール",
+    "route": "/(tabs)/profile",
+    "content": "名前・写真・テーマ・統計・DNA・履歴入口",
+    "rules": "私的な自分の記録を表示可能"
+  },
+  {
+    "id": "S15",
+    "name": "他人のプロフィール",
+    "route": "/u/[handle]",
+    "content": "公開された自己紹介・統計・履歴、友達申請、フォロー",
+    "rules": "私的/匿名履歴を統計から推測させない"
+  },
+  {
+    "id": "S16",
+    "name": "履歴一覧",
+    "route": "/history",
+    "content": "月別、カテゴリ、進行中/完了",
+    "rules": "R3で自分の全文検索。未回答スコアは「未回答」"
+  },
+  {
+    "id": "S17",
+    "name": "履歴詳細",
+    "route": "/history/[id]",
+    "content": "自分の決断・Review・相談詳細への入口",
+    "rules": "他者は共有用記録だけ。元投稿の権限は別"
+  },
+  {
+    "id": "S18",
+    "name": "履歴共有",
+    "route": "/history/[id]/share",
+    "content": "self/friends/public、共有項目プレビュー",
+    "rules": "票・回答者・投票メモを含めない。匿名相談では不可"
+  },
+  {
+    "id": "S19",
+    "name": "Decision DNA",
+    "route": "/dna",
+    "content": "解放状態、8名称、最近の観測事実",
+    "rules": "0〜2/3〜4/5〜9/10以上、算定不足なら分析中"
+  },
+  {
+    "id": "S20",
+    "name": "友達",
+    "route": "/friends",
+    "content": "友達/申請、ユーザー検索、申請・承認",
+    "rules": "拒否通知なし、連絡先アップロード無し"
+  },
+  {
+    "id": "S21",
+    "name": "QR",
+    "route": "/friends/qr",
+    "content": "自分のQR、読み取り",
+    "rules": "読み取りは対象の友達申請画面へ、即友達にならない"
+  },
+  {
+    "id": "S22",
+    "name": "プロフィール編集",
+    "route": "/settings/profile",
+    "content": "写真・名前・@ID・自己紹介・16タイプ・テーマ",
+    "rules": "ID変更制約、文字上限、無断公開なし"
+  },
+  {
+    "id": "S23",
+    "name": "設定",
+    "route": "/settings",
+    "content": "通知・公開設定・ブロック・サポート・アカウント",
+    "rules": "外部リンクはhttp/httpsのみ"
+  },
+  {
+    "id": "S24",
+    "name": "通知設定",
+    "route": "/settings/notifications",
+    "content": "通知種別、23〜8休止、プレビュー",
+    "rules": "OS許可の状態とアプリ設定を区別"
+  },
+  {
+    "id": "S25",
+    "name": "公開設定",
+    "route": "/settings/privacy",
+    "content": "16タイプ/DNA/友達数/フォロー数、公開時の説明",
+    "rules": "投稿範囲をアカウント鍵設定へ置き換えない"
+  },
+  {
+    "id": "S26",
+    "name": "通報・問い合わせ",
+    "route": "/support",
+    "content": "理由、任意300字、送信、異議申し立て",
+    "rules": "通報者を相手へ返さない"
+  },
+  {
+    "id": "S27",
+    "name": "ブロック管理",
+    "route": "/settings/blocked",
+    "content": "ブロック一覧、解除",
+    "rules": "解除してもFriend/Followを自動復元しない"
+  },
+  {
+    "id": "S28",
+    "name": "アカウント削除",
+    "route": "/settings/account",
+    "content": "削除の影響、再認証、実行",
+    "rules": "再認証10分以内、削除要求後はセッション失効"
+  },
+  {
+    "id": "W01",
+    "name": "リンクの相談",
+    "route": "/i/[token]、/d/[id]",
+    "content": "投稿→投票→結果、登録は任意",
+    "rules": "リンクtokenをURLから交換後除去。公開ゲストはpilot限定"
+  },
+  {
+    "id": "W02",
+    "name": "続きを受け取る",
+    "route": "/continue/[flowId]",
+    "content": "Apple/Google、今はしない",
+    "rules": "最初に元投稿を示す。票引き継ぎの名前扱いを説明"
+  },
+  {
+    "id": "W03",
+    "name": "表示不可",
+    "route": "/unavailable",
+    "content": "「この相談は表示できません」",
+    "rules": "無権限/削除/失効の内部詳細を明かさない"
+  },
+  {
+    "id": "A01",
+    "name": "運営案件一覧",
+    "route": "/admin/moderation",
+    "content": "held/reported/appealed、危険度・滞留順",
+    "rules": "staff+MFAのみ。一般ナビから表示しない"
+  },
+  {
+    "id": "A02",
+    "name": "運営案件詳細",
+    "route": "/admin/moderation/[id]",
+    "content": "対象版、理由、証拠、公開/維持/削除/機能停止",
+    "rules": "監査ログ必須、最新投稿版へ再確認"
+  }
+]
