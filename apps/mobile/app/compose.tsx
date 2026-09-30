@@ -1,0 +1,9 @@
+import { router } from 'expo-router';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput } from 'react-native';
+import { validatePostText } from '@decide/domain';
+import { DemoBanner, PrimaryButton, Screen, s } from '../src/ui';
+
+export default function Compose(){const [q,setQ]=useState('');const [a,setA]=useState('');const [b,setB]=useState('');const [context,setContext]=useState('');const [error,setError]=useState('');function next(){try{const v=validatePostText(q,a,b,context);router.push({pathname:'/compose-confirm',params:v})}catch{setError('質問・A・Bを確認してください。AとBは異なる内容にします。')}}return <Screen><DemoBanner/><ScrollView keyboardShouldPersistTaps="handled"><Text style={s.eyebrow}>1 / 2</Text><Text style={s.title}>相談を書く</Text><Field label="質問" value={q} onChangeText={setQ} maxLength={160}/><Field label="A" value={a} onChangeText={setA} maxLength={60}/><Field label="B" value={b} onChangeText={setB} maxLength={60}/><Field label="補足（任意）" value={context} onChangeText={setContext} multiline maxLength={600}/>{error?<Text accessibilityRole="alert" style={x.error}>{error}</Text>:null}<PrimaryButton label="次へ" onPress={next}/></ScrollView></Screen>}
+function Field(p:{label:string;value:string;onChangeText:(v:string)=>void;maxLength:number;multiline?:boolean}){return <><Text style={x.label}>{p.label}</Text><TextInput accessibilityLabel={p.label} value={p.value} onChangeText={p.onChangeText} multiline={p.multiline} style={[x.input,p.multiline&&{minHeight:96}]} /></>}
+const x=StyleSheet.create({label:{fontSize:14,fontWeight:'700',marginTop:18,marginBottom:6},input:{minHeight:48,borderWidth:1,borderColor:'#BABCC2',borderRadius:12,padding:12,fontSize:16},error:{color:'#9D1C1C',marginTop:12}});

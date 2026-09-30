@@ -48,3 +48,17 @@ python3 tools/verify_bundle.py
 TypeScript型検査、SQL適用、画面見本の検査を行った場合の結果は `verification/REPORT.md` に記載しています。未実施の実機・OAuth・Push・本番RLS試験を合格扱いにしないでください。
 
 このパッケージが実装の正本です。過去のv1.1等を追加で探したり、矛盾するルールを混在させたりする必要はありません。
+
+## 実装リポジトリの起動（着手版）
+
+このリポジトリには現在、M0のExpo/Next.jsシェルと、後続マイルストーンの参照ドメイン・private DB骨格があります。完成版・本番接続済みではありません。依存関係を取得できる環境で次を実行します。
+
+```sh
+npm install
+npm run dev:mobile       # Expo Router
+npm run dev:web          # http://localhost:3000（ゲスト見本は /i/demo）
+npm run test:unit
+npm run typecheck
+```
+
+Supabase CLIとDocker互換環境がある場合は `npm run test:db` を使います。環境値は `.env.example` を参照してください。値がない間は、画面に「ローカルデモ」と明示した決定的fixtureだけを使用します。実装範囲・実行結果・外部設定待ちは `IMPLEMENTATION_STATUS.md` に記録しています。
