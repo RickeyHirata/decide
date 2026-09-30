@@ -31,3 +31,6 @@ Supabase project values, Apple/Google OAuth values, public web/API domains, Expo
 
 ## 2026-10-01 Setup repair
 Dependency resolution, app TypeScript configuration, and Web build repaired; see docs/17-container-diagnosis.md for evidence and remaining Cloud uncertainty. This does not advance functional milestones or claim Cloud container recovery.
+
+## 2026-10-01 Cloud validation follow-up
+The original Codex environment still points to `stock-analytics/decide` and failed while downloading the repository after PR #2 merged. A fresh environment bound to `RickeyHirata/decide` reached the merged HEAD `40a168fb0b902e88973fbb2626f245bb58c01962`. In that Cloud task, `npm ci`, `npm run typecheck`, and `npm run build:web` passed. `npm run test:unit` stopped before running cases because the auto-selected Node 20.20.2 does not support `--experimental-strip-types`. This follow-up pins Node 24 with `.nvmrc`. Locally on Node 24.19.0, all 51 unit tests passed; app typecheck in this transient workspace was unavailable because `node_modules` was not installed. Re-run the Cloud check after this patch merges. M0 remains in progress.
