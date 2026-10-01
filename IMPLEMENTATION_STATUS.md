@@ -1,12 +1,12 @@
 # DECIDE implementation status
 
-Updated: 2026-09-30 (UTC)
+Updated: 2026-10-01 (UTC)
 
 ## Milestones
 
 | Milestone | State | Implemented in this handoff |
 |---|---|---|
-| M0 Display | In progress | npm monorepo, shared tokens/domain DTO, Expo Router shell, two-screen compose flow, decision demo, and small Next.js guest/unavailable flow. Fixtures are visibly marked as local demo. The full 33-screen/10-sheet interaction matrix and device/a11y checks remain. |
+| M0 Display | In progress | Expo tab shell, friend/discovery feeds, two notification groups, profile/history/category/DNA, decision→outcome→review, two-screen compose, settings/friends/support surfaces, all 10 interactive sheet demos, and W01–W03 guest Web routes. Fixtures are visibly marked as local demo. The remaining screen/state depth and device/a11y checks below prevent calling M0 complete. |
 | M1 Auth/authorization | Started | Private-schema contract retained, server flags default off, environment boundary documented. Supabase migrations/RPC/BFF session and real denial tests remain. |
 | M2 Consultation/voting | Started | Pure reference policies and unit tests retained; client consumes a projected DTO. Transactional RPC, media, moderation adapter, invite exchange and claim integration remain. |
 | M3 Records | Reference only | Pure final/review/history/DNA policies exist; persistence/API/UI integration remains. |
@@ -31,3 +31,41 @@ Supabase project values, Apple/Google OAuth values, public web/API domains, Expo
 
 ## 2026-10-01 Setup repair
 Dependency resolution, app TypeScript configuration, and Web build repaired; see docs/17-container-diagnosis.md for evidence and remaining Cloud uncertainty. This does not advance functional milestones or claim Cloud container recovery.
+
+## 2026-10-01 M0 interaction pass
+
+### Screen inventory
+
+| IDs | Local demo state | Remaining M0 work |
+|---|---|---|
+| S01–S02 | Implemented welcome and onboarding input/validation paths. | Real provider handoff is M1; add terms-version fixture variation. |
+| S03–S04 | Implemented four-tab shell, friend/discovery switching, decision card, and explicit loading/empty/error demos. | Cursor pagination and long multi-card fixtures remain. |
+| S05–S07 | Existing two-screen compose and held/success flow retained. | Photo/crop and the full settings controls need deeper integration; grapheme-aware counters need UI parity with domain validation. |
+| S08–S09 | Implemented selection, confirmed projection, result, retained error selection, and supporting actions. | All owner/mutable/locked/closed projections and O07 change flow are not yet exercised from this route. |
+| S10–S12 | Implemented decision, optional outcome, and 1–10 review flow with saved/postponed feedback. | Photo outcome, custom review date sheet integration, revision history, and persisted draft restoration remain. |
+| S13 | Implemented separate “対応が必要” and “お知らせ” sections with action-count badge semantics. | Read/unread fixtures and cancellation transitions remain. |
+| S14–S19 | Implemented own/public profiles, month/category history, detail/share projection, and staged DNA. | Profile theme editor depth and every DNA unlock tier remain. |
+| S20–S28 | Implemented friends/requests/QR, profile/notification/privacy/block/account settings, and support forms. | Camera QR, individual block removal, account reauthentication, appeal variants, and complete field validation remain. |
+| W01–W03 | W01 retained; implemented continuation and indistinguishable unavailable Web pages. | Browser E2E and guest claim integration are later milestones. |
+| A01–A02 | Listed only in the M0 catalog and intentionally excluded from general navigation. | Staff-only interactive fixture surfaces still remain for M0; real MFA/authorization is M4. |
+| O01–O10 | Each has a focus-contained modal demo with close/save and representative retained input or selection. | O01 crop gestures, O02 date validation, O03 search, and per-sheet integration with their origin screens remain. |
+
+The M0 catalog is a traceability and navigation aid, not evidence that listed-only staff screens or shallow generic controls are complete. M0 remains **in progress**.
+
+### Commands and actual results for this pass
+
+- `git rev-parse HEAD` — passed at start: `40a168fb0b902e88973fbb2626f245bb58c01962`.
+- `node --version` — passed at start: `v24.15.0`; no Node 20 switch was needed.
+- `npm ci` — passed; 614 packages installed. npm emitted the environment's `http-proxy` deprecation warning and one transitive `uuid` deprecation warning.
+- `npm run typecheck` — passed for root, Expo, and Next.js projects.
+- `npm run test:unit` — passed: 51/51.
+- `npm run build:web` — passed; `/`, `/i/[token]`, `/continue/[flowId]`, and `/unavailable` were built.
+- `npm run test:e2e` — passed: 1/1 route/source contract test. This is not a browser interaction test.
+- 320/390/414 widths, light/dark mode, 200% text, screen readers, keyboard focus, native device behavior, and browser click-through — **not verified** in this non-interactive pass. Responsive/dark token support was implemented, but that is not a visual-test result.
+
+### Next concrete M0 work
+
+1. Replace generic sheet demos with originating-screen integrations, beginning with compose photo/crop, deadline, and friend selection while preserving drafts.
+2. Add explicit fixture projections for every S08/S09 role/state without leaking result fields into author/unvoted DTOs.
+3. Build staff-only A01/A02 display fixtures outside general navigation, then automate mobile route interaction and Web guest continuation tests.
+4. Run and record real 320/390/414, light/dark, 200% text, VoiceOver/TalkBack, keyboard, and safe-area checks.
