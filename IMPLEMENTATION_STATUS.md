@@ -48,7 +48,7 @@ Dependency resolution, app TypeScript configuration, and Web build repaired; see
 | S20–S28 | Implemented friends/requests/QR, profile/notification/privacy/block/account settings, and support forms. | Camera QR, individual block removal, account reauthentication, appeal variants, and complete field validation remain. |
 | W01–W03 | W01 retained; implemented continuation and indistinguishable unavailable Web pages. | Browser E2E and guest claim integration are later milestones. |
 | A01–A02 | Listed only in the M0 catalog and intentionally excluded from general navigation. | Staff-only interactive fixture surfaces still remain for M0; real MFA/authorization is M4. |
-| O01–O10 | Each has a focus-contained modal demo with close/save and representative retained input or selection. | O01 crop gestures, O02 date validation, O03 search, and per-sheet integration with their origin screens remain. |
+| O01–O10 | O02/O03/O07/O10 have confirm/cancel local-state demos. Other sheets are visibly marked incomplete. | O01/O04/O05/O06/O08/O09 implementation, O02 date validation, O03 search, and further origin-screen integration remain. |
 
 The M0 catalog is a traceability and navigation aid, not evidence that listed-only staff screens or shallow generic controls are complete. M0 remains **in progress**.
 
@@ -69,3 +69,29 @@ The M0 catalog is a traceability and navigation aid, not evidence that listed-on
 2. Add explicit fixture projections for every S08/S09 role/state without leaking result fields into author/unvoted DTOs.
 3. Build staff-only A01/A02 display fixtures outside general navigation, then automate mobile route interaction and Web guest continuation tests.
 4. Run and record real 320/390/414, light/dark, 200% text, VoiceOver/TalkBack, keyboard, and safe-area checks.
+
+## 2026-10-01 PR #4 review corrections
+
+M0 remains **in progress**. This pass corrects core demo semantics rather than expanding the claimed completion boundary.
+
+- The center `＋` is now an action that pushes compose without becoming a selected tab. Notification Badge is derived from shared unresolved local actions rather than a fixed value.
+- Decision routes now reject unknown IDs and use explicit owner/voter, open/closed, and unvoted/mutable/locked fixtures. Result percentages are calculated from fixture counts and are projected only to allowed states. Voter and owner actions are separated.
+- A provider-scoped in-memory demo state now keeps final choice, optional outcome, Review and relevant settings consistent across detail/history/review routes. Choosing B remains B, `neither` is supported, and `undecided` creates no final. Final save returns to detail; outcome and Review remain optional. This state lasts only until the Expo React tree is reloaded/restarted and is not persisted or synchronized.
+- O02/O03/O07/O10 use temporary sheet drafts and update shared state only on confirm; cancel leaves the committed value unchanged. O01/O04/O05/O06/O08/O09 are explicitly labelled incomplete and do not offer fake save controls.
+- OAuth, report submission and account deletion are explicitly unavailable rather than fake-success operations. Friend request and support preview behaviors identify their screen-local lifetime and do not claim network effects.
+- Mobile primitives now import the canonical design tokens. The demo banner uses the active surface/ink palette in dark mode.
+
+### Regression checks for this correction
+
+- `npm run typecheck` — passed for root, Expo and Next.js.
+- `npm run test:unit` — passed: 57/57, including B→Review state consistency, undecided-without-final, voter/owner fixtures, fixture-derived results, sheet cancel semantics, and one-time Review postponement.
+- `npm run build:web` — passed for all Web routes.
+- `git diff --check` — passed.
+- Actual native/browser interaction, 320/390/414 widths, light/dark visual inspection, 200% text, screen reader, keyboard and safe-area behavior remain unverified in this non-interactive environment.
+
+### Remaining M0 work after review correction
+
+1. Complete O01/O04/O05/O06/O08/O09 and add date validation/search depth to O02/O03.
+2. Add automated rendered-navigation tests for role/state projections and sheet confirm/cancel behavior; current regression tests cover the pure shared-state transitions.
+3. Complete A01/A02 staff-only display fixtures and the remaining per-screen loading/error/unavailable variants.
+4. Perform and record the real-device and browser visual/accessibility matrix above.

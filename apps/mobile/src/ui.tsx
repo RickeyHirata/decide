@@ -1,14 +1,67 @@
-import type { PropsWithChildren, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { colors as designColors, radius, size, space, typography } from '@decide/design';
 
-const light={canvas:'#FFFFFF',surface:'#F4F5F6',ink:'#111214',muted:'#55575F',line:'#E3E4E8',lime:'#ECF3CE',lilac:'#E9E1FF',brand:'#D5FF45',onBrand:'#152000',danger:'#B42318'};
-const dark={canvas:'#101113',surface:'#1D1F23',ink:'#F5F5F7',muted:'#B3B5BE',line:'#35373D',lime:'#343E23',lilac:'#383049',brand:'#D5FF45',onBrand:'#152000',danger:'#FFB4AB'};
-export const colors=light;
-export function usePalette(){return useColorScheme()==='dark'?dark:light}
-export function DemoBanner(){const c=usePalette();return <View style={[s.demo,{borderColor:c.line}]}><Text style={[s.demoText,{color:c.ink}]}>ローカルデモ — 架空データ・サーバー未接続</Text></View>}
-export function Screen({children,scroll=false}:{children:ReactNode;scroll?:boolean}){const c=usePalette();const content=<View style={[s.screen,{backgroundColor:c.canvas}]}>{children}</View>;return scroll?<ScrollView style={{backgroundColor:c.canvas}} contentContainerStyle={{flexGrow:1}} keyboardShouldPersistTaps="handled">{content}</ScrollView>:content}
-export function PrimaryButton({label,onPress,disabled=false}:{label:string;onPress:()=>void;disabled?:boolean}){return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({pressed})=>[s.primary,pressed&&{opacity:.72},disabled&&{opacity:.4}]}><Text style={s.primaryText}>{label}</Text></Pressable>}
-export function ChoiceButton({label,selected,onPress,tone='plain'}:{label:string;selected?:boolean;onPress:()=>void;tone?:'a'|'b'|'plain'}){const c=usePalette();return <Pressable accessibilityRole="button" accessibilityState={{selected}} onPress={onPress} style={[s.choice,{backgroundColor:tone==='a'?c.lime:tone==='b'?c.lilac:c.surface,borderColor:selected?c.ink:c.line,borderWidth:selected?3:1}]}><Text style={[s.choiceText,{color:c.ink}]}>{label}{selected?'　✓':''}</Text></Pressable>}
-export function StatePanel({kind='empty',children,onRetry}:{kind?:'loading'|'empty'|'error';children:ReactNode;onRetry?:()=>void}){const c=usePalette();return <View style={[s.panel,{backgroundColor:c.surface}]}><Text style={[s.body,{color:c.ink}]}>{kind==='loading'?'読み込んでいます…':children}</Text>{kind==='error'&&onRetry?<Pressable onPress={onRetry}><Text style={[s.link,{color:c.ink}]}>もう一度試す</Text></Pressable>:null}</View>}
-export function Section({title,children}:{title:string;children:ReactNode}){const c=usePalette();return <View style={[s.section,{borderColor:c.line}]}><Text style={[s.sectionTitle,{color:c.ink}]}>{title}</Text>{children}</View>}
-export const s=StyleSheet.create({screen:{flex:1,paddingHorizontal:18,paddingTop:18,paddingBottom:24},demo:{backgroundColor:'#FFF5C2',borderWidth:1,padding:8,borderRadius:8,marginBottom:14},demoText:{fontSize:12,fontWeight:'700',textAlign:'center'},eyebrow:{fontSize:14,fontWeight:'600',color:'#686A70',marginBottom:8},title:{fontSize:25,lineHeight:35,fontWeight:'800'},body:{fontSize:16,lineHeight:24},primary:{minHeight:52,borderRadius:14,backgroundColor:'#D5FF45',alignItems:'center',justifyContent:'center',paddingHorizontal:18,marginTop:18},primaryText:{fontSize:16,fontWeight:'800',color:'#152000'},choice:{minHeight:52,borderRadius:14,padding:14,justifyContent:'center',marginTop:8},choiceText:{fontSize:16,lineHeight:24,fontWeight:'700'},panel:{borderRadius:12,padding:16,marginTop:16},link:{fontSize:14,fontWeight:'700',textDecorationLine:'underline',marginTop:10},section:{borderTopWidth:1,paddingVertical:18},sectionTitle:{fontSize:20,lineHeight:28,fontWeight:'700',marginBottom:10}});
+export function usePalette() {
+  const source = useColorScheme() === 'dark' ? designColors.dark : designColors.light;
+  return {
+    ...source,
+    lime: source.aSurface,
+    lilac: source.bSurface,
+    brand: source.accent,
+    onBrand: source.onAccent,
+  };
+}
+
+export function DemoBanner() {
+  const c = usePalette();
+  return <View style={[styles.demo, { backgroundColor: c.surface, borderColor: c.line }]}><Text style={[styles.demoText, { color: c.ink }]}>ローカルデモ — 架空データ・サーバー未接続</Text></View>;
+}
+
+export function Screen({ children, scroll = false }: { children: ReactNode; scroll?: boolean }) {
+  const c = usePalette();
+  const content = <View style={[styles.screen, { backgroundColor: c.canvas }]}>{children}</View>;
+  return scroll
+    ? <ScrollView style={{ backgroundColor: c.canvas }} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">{content}</ScrollView>
+    : content;
+}
+
+export function PrimaryButton({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
+  return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.primary, pressed && { opacity: 0.72 }, disabled && { opacity: 0.4 }]}><Text style={styles.primaryText}>{label}</Text></Pressable>;
+}
+
+export function ChoiceButton({ label, selected, onPress, tone = 'plain' }: { label: string; selected?: boolean; onPress: () => void; tone?: 'a' | 'b' | 'plain' }) {
+  const c = usePalette();
+  return <Pressable accessibilityRole="button" accessibilityState={{ selected }} onPress={onPress} style={[styles.choice, { backgroundColor: tone === 'a' ? c.lime : tone === 'b' ? c.lilac : c.surface, borderColor: selected ? c.ink : c.line, borderWidth: selected ? 3 : 1 }]}><Text style={[styles.choiceText, { color: c.ink }]}>{label}{selected ? '　✓' : ''}</Text></Pressable>;
+}
+
+export function StatePanel({ kind = 'empty', children, onRetry }: { kind?: 'loading' | 'empty' | 'error'; children: ReactNode; onRetry?: () => void }) {
+  const c = usePalette();
+  return <View style={[styles.panel, { backgroundColor: c.surface }]}><Text style={[styles.body, { color: c.ink }]}>{kind === 'loading' ? '読み込んでいます…' : children}</Text>{kind === 'error' && onRetry ? <Pressable onPress={onRetry}><Text style={[styles.link, { color: c.ink }]}>もう一度試す</Text></Pressable> : null}</View>;
+}
+
+export function Section({ title, children }: { title: string; children: ReactNode }) {
+  const c = usePalette();
+  return <View style={[styles.section, { borderColor: c.line }]}><Text style={[styles.sectionTitle, { color: c.ink }]}>{title}</Text>{children}</View>;
+}
+
+export const s = StyleSheet.create({
+  eyebrow: { ...typography.label, color: designColors.light.muted, marginBottom: space.xs },
+  title: { ...typography.question },
+  body: { ...typography.body },
+});
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, paddingHorizontal: space.page, paddingTop: space.page, paddingBottom: space.lg },
+  demo: { borderWidth: 1, padding: space.xs, borderRadius: radius.small, marginBottom: space.narrowPage },
+  demoText: { ...typography.caption, fontWeight: '700', textAlign: 'center' },
+  primary: { minHeight: size.primaryButton, borderRadius: radius.primary, backgroundColor: designColors.light.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.page, marginTop: space.page },
+  primaryText: { ...typography.body, fontWeight: '800', color: designColors.light.onAccent },
+  choice: { minHeight: size.primaryButton, borderRadius: radius.primary, padding: space.narrowPage, justifyContent: 'center', marginTop: space.xs },
+  choiceText: { ...typography.body, fontWeight: '700' },
+  panel: { borderRadius: radius.input, padding: space.md, marginTop: space.md },
+  body: { ...typography.body },
+  link: { ...typography.label, textDecorationLine: 'underline', marginTop: space.sm },
+  section: { borderTopWidth: 1, paddingVertical: space.page },
+  sectionTitle: { ...typography.section, marginBottom: space.sm },
+});
