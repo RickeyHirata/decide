@@ -6,6 +6,7 @@ import { DemoBanner, Screen, Section, StatePanel, usePalette } from '../../src/u
 export default function Notifications() {
   const c = usePalette();
   const { state } = useDemoState();
+  const record = state.decisions['demo-owner-closed'];
   return <Screen scroll>
     <DemoBanner />
     <Text style={[styles.title, { color: c.ink }]}>通知</Text>
@@ -13,8 +14,8 @@ export default function Notifications() {
       {state.unresolvedActions === 0
         ? <StatePanel>対応が必要な通知はありません。</StatePanel>
         : <>
-          {!state.finalChoice && !state.finalPending ? <Link href="/decision/demo-owner-closed/decide" style={[styles.item, { color: c.ink }]}>コートの相談を決断する ›</Link> : null}
-          {state.finalChoice && state.review.status === 'none' ? <Link href="/decision/demo-owner-closed/review" style={[styles.item, { color: c.ink }]}>前の決断を振り返る ›</Link> : null}
+          {!record?.finalChoice && !record?.finalPending ? <Link href="/decision/demo-owner-closed/decide" style={[styles.item, { color: c.ink }]}>コートの相談を決断する ›</Link> : null}
+          {record?.finalChoice && record.review.status === 'none' ? <Link href="/decision/demo-owner-closed/review" style={[styles.item, { color: c.ink }]}>前の決断を振り返る ›</Link> : null}
         </>}
     </Section>
     <Section title="お知らせ">

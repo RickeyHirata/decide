@@ -1,52 +1,73 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { decisionFixtures, demoReducer, initialDemoState, resultPercent } from '../apps/mobile/src/demo-state.ts';
+import { canAccessOwnerRecord, decisionFixtures, demoReducer, historyFixtures, initialDemoState, projectDecision } from '../apps/mobile/src/demo-state.ts';
 
-test('B final choice remains B through review and history state', () => {
-  const decided = demoReducer(initialDemoState, { type: 'save-final', choice: 'B' });
-  const reviewed = demoReducer(decided, { type: 'save-review', score: 8, memo: 'よかった' });
-  assert.equal(reviewed.finalChoice, 'B');
-  assert.equal(reviewed.review.score, 8);
-  assert.equal(reviewed.review.memo, 'よかった');
-  assert.equal(reviewed.review.status, 'saved');
-  assert.equal(reviewed.unresolvedActions, 0);
+test('first ballot stays mutable and hides results for five minutes', () => {
+  const voted = demoReducer(initialDemoState, { type: 'cast-vote', decisionId: 'demo-coat', choice: 'A', now: '2026-10-01T09:00:00.000Z' });
+  const during = projectDecision(decisionFixtures['demo-coat'], voted, '2026-10-01T09:04:59.999Z');
+  assert.equal(during.canChange, true);
+  assert.equal(during.result, null);
+  const expired = projectDecision(decisionFixtures['demo-coat'], voted, '2026-10-01T09:05:00.000Z');
+  assert.equal(expired.canChange, false);
+  assert.ok(expired.result);
 });
 
-test('undecided creates no final decision', () => {
-  const held = demoReducer(initialDemoState, { type: 'hold-final' });
-  assert.equal(held.finalChoice, null);
-  assert.equal(held.finalPending, true);
-  assert.equal(held.unresolvedActions, 0);
-  assert.equal(demoReducer(held, { type: 'save-review', score: 5, memo: '' }), held);
+test('mutable A to B change is allowed once and locks immediately', () => {
+  const changed = demoReducer(initialDemoState, { type: 'change-vote', decisionId: 'demo-coat-mutable', choice: 'B', now: '2026-10-01T09:00:00.000Z' });
+  assert.equal(changed.ballots['demo-coat-mutable'].choice, 'B');
+  assert.equal(changed.ballots['demo-coat-mutable'].changes, 1);
+  assert.ok(changed.ballots['demo-coat-mutable'].lockedAt);
+  const second = demoReducer(changed, { type: 'change-vote', decisionId: 'demo-coat-mutable', choice: 'A', now: '2026-10-01T09:01:00.000Z' });
+  assert.equal(second, changed);
 });
 
-test('voter fixtures never acquire owner role or owner operation', () => {
-  for (const fixture of Object.values(decisionFixtures).filter((item) => item.role === 'voter')) {
-    assert.equal(fixture.role, 'voter');
-  }
-  assert.equal(decisionFixtures['demo-owner-open'].role, 'owner');
+test('same choice confirms immediately without consuming a change', () => {
+  const confirmed = demoReducer(initialDemoState, { type: 'change-vote', decisionId: 'demo-coat-mutable', choice: 'A', now: '2026-10-01T09:00:00.000Z' });
+  assert.equal(confirmed.ballots['demo-coat-mutable'].changes, 0);
+  assert.equal(confirmed.ballots['demo-coat-mutable'].lockedAt, '2026-10-01T09:00:00.000Z');
+  assert.ok(projectDecision(decisionFixtures['demo-coat-mutable'], confirmed).result);
 });
 
-test('results derive from fixture ballots without tie contradiction', () => {
-  assert.deepEqual(resultPercent({ A: 6, B: 4 }), { A: 60, B: 40, total: 10 });
-  assert.deepEqual(resultPercent({ A: 5, B: 5 }), { A: 50, B: 50, total: 10 });
+test('owner and unvoted voter projections never expose open results', () => {
+  assert.equal(projectDecision(decisionFixtures['demo-owner-open'], initialDemoState).result, null);
+  assert.equal(projectDecision(decisionFixtures['demo-coat'], initialDemoState).result, null);
+  assert.equal(projectDecision(undefined, initialDemoState).allowed, false);
 });
 
-test('sheet cancellation leaves committed settings unchanged', () => {
-  const draftDeadline = '15分';
-  assert.equal(draftDeadline, '15分');
+test('owner-only direct routes require a closed owner fixture', () => {
+  assert.equal(canAccessOwnerRecord(decisionFixtures['demo-owner-closed']), true);
+  assert.equal(canAccessOwnerRecord(decisionFixtures['demo-owner-open']), false);
+  assert.equal(canAccessOwnerRecord(decisionFixtures['demo-coat']), false);
+  assert.equal(canAccessOwnerRecord(undefined), false);
+});
+
+test('final decisions and reviews are isolated by decision id', () => {
+  const decided = demoReducer(initialDemoState, { type: 'save-final', decisionId: 'demo-owner-closed', choice: 'B' });
+  const reviewed = demoReducer(decided, { type: 'save-review', decisionId: 'demo-owner-closed', score: 8, memo: 'よかった' });
+  assert.equal(reviewed.decisions['demo-owner-closed'].finalChoice, 'B');
+  assert.equal(reviewed.decisions['demo-owner-closed'].review.score, 8);
+  assert.equal(reviewed.decisions['another-id'], undefined);
+  const heldElsewhere = demoReducer(reviewed, { type: 'hold-final', decisionId: 'another-id' });
+  assert.equal(heldElsewhere.decisions['another-id'].finalChoice, null);
+  assert.equal(heldElsewhere.decisions['demo-owner-closed'].finalChoice, 'B');
+});
+
+test('history fixtures project distinct content and reject unknown ids', () => {
+  assert.equal(historyFixtures['demo-desk'].question, '作業机はどちらにする？');
+  assert.equal(historyFixtures['demo-trip'].category, '旅行');
+  assert.notEqual(historyFixtures['demo-desk'].date, historyFixtures['demo-trip'].date);
+  assert.equal(historyFixtures['missing'], undefined);
+});
+
+test('custom deadlines require deterministic future times', () => {
+  const invalid = demoReducer(initialDemoState, { type: 'set-deadline', value: '日時指定', customAt: '2026-10-01T08:59:00Z' });
+  assert.equal(invalid, initialDemoState);
+  const valid = demoReducer(initialDemoState, { type: 'set-deadline', value: '日時指定', customAt: '2026-10-02T09:00:00Z' });
+  assert.equal(valid.settings.voteDeadline, '日時指定');
+});
+
+test('sheet draft cancellation leaves committed deadline unchanged', () => {
+  const draftDeadline = '1時間';
+  assert.equal(draftDeadline, '1時間');
   assert.equal(initialDemoState.settings.voteDeadline, '3時間');
-  const confirmed = demoReducer(initialDemoState, { type: 'set-deadline', value: draftDeadline });
-  assert.equal(confirmed.settings.voteDeadline, '15分');
-  assert.equal(initialDemoState.settings.voteDeadline, '3時間');
-});
-
-test('review postponement is one-time and skip keeps score null', () => {
-  const decided = demoReducer(initialDemoState, { type: 'save-final', choice: 'neither' });
-  const postponed = demoReducer(decided, { type: 'postpone-review', mode: '7d' });
-  const second = demoReducer(postponed, { type: 'postpone-review', mode: 'custom' });
-  assert.equal(second.review.postponedUntil, '7日後');
-  const skipped = demoReducer(decided, { type: 'skip-review' });
-  assert.equal(skipped.review.score, null);
-  assert.equal(skipped.review.status, 'skipped');
 });

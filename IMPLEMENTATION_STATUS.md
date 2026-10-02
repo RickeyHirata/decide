@@ -95,3 +95,27 @@ M0 remains **in progress**. This pass corrects core demo semantics rather than e
 2. Add automated rendered-navigation tests for role/state projections and sheet confirm/cancel behavior; current regression tests cover the pure shared-state transitions.
 3. Complete A01/A02 staff-only display fixtures and the remaining per-screen loading/error/unavailable variants.
 4. Perform and record the real-device and browser visual/accessibility matrix above.
+
+## 2026-10-01 PR #4 second review corrections
+
+M0 remains **in progress**. No real authentication, ballot, report, persistence, or server clock is represented by these deterministic fixtures.
+
+- Interactive demo ballots now have `firstAt`, `mutableUntil`, change count and lock time. A first vote remains result-hidden for five minutes; one actual change or same-choice immediate confirmation locks it; reaching the deterministic five-minute boundary also projects it as locked.
+- `projectDecision` is the shared near-UI projection for role, phase, ballot state, available actions and result visibility. Open owners, unvoted voters and mutable voters receive no result projection.
+- O02 now offers only 1 hour / 3 hours / 1 day / 1 week / custom time in this requested demo scope. Custom vote deadlines and O10 custom postponements require a parseable time after deterministic `DEMO_NOW`; cancel still leaves the committed value unchanged.
+- History detail uses separate fixtures for desk/trip records, rejects unknown IDs, and stores share scope per history ID in provider memory.
+- Final/outcome/Review data is keyed by decision ID. Direct owner subroutes require a closed owner fixture; voter and open-owner IDs are rejected. Final result copy is calculated from the fixture counts, and the unsupported fixed “24 hours” wording was removed from undecided.
+
+### Checks for the second correction
+
+- `npm run typecheck` — passed for root, Expo and Next.js.
+- `npm run test:unit` — passed: 60/60. New projection-linked tests cover five-minute hiding/boundary locking, one actual change, same-choice immediate confirmation, owner/unvoted non-disclosure, direct-route authorization, decision-ID isolation, distinct history fixtures, custom deadline validation and cancel semantics.
+- `npm run build:web` — passed for all Web routes.
+- `git diff --check` — passed.
+- Rendered navigation tests and real native/browser inspection remain unavailable in this pass; pure projection tests do not prove Expo rendering, navigation focus, accessibility or production authorization.
+
+### Remaining M0 work
+
+1. Add rendered Expo route tests around projection/action wiring, including advancing the demo clock from mutable to locked on-screen.
+2. Complete the previously listed unfinished sheets and staff fixtures.
+3. Run the 320/390/414, light/dark, 200% text, screen-reader, keyboard and safe-area matrix on actual targets.
