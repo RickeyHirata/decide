@@ -5,7 +5,7 @@ import { useDemoState } from '../../src/demo-context';
 import { canConfirmVoteChange, decisionFixtures, demoNowForDecision, isFutureIso, projectDecision } from '../../src/demo-state';
 import { ChoiceButton, PrimaryButton, StatePanel, usePalette } from '../../src/ui';
 
-const categories = ['ファッション', '買い物', '旅行', '仕事', '学び', '健康', '食事', '恋愛', '家族', '趣味', 'その他'];
+const categories = ['恋愛', '人間関係', 'ファッション・美容', '食事', '買い物', '旅行・おでかけ', '学校・仕事', '趣味・エンタメ', 'お金・経済', '政治・社会', 'その他'];
 const titles: Record<string, string> = { o01: '写真選択・位置調整', o02: '期限を選ぶ', o03: '相談する友達', o04: '投票者ひとこと', o05: '投稿メニュー', o06: '回答者', o07: '投票を変更', o08: '終了・削除', o09: 'カテゴリ修正', o10: '振り返りを延期' };
 
 export default function Sheet() {
