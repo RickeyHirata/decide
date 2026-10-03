@@ -9,9 +9,11 @@ export default function Outcome() {
   const c = usePalette();
   const { id = 'demo-owner-closed' } = useLocalSearchParams<{ id: string }>();
   const { state, dispatch } = useDemoState();
+  const sourceFixture = decisionFixtures[id];
+  const fixture = sourceFixture && state.postStates[id] === 'closed' ? { ...sourceFixture, phase: 'closed' as const } : sourceFixture;
   const record = state.decisions[id];
   const [text, setText] = useState(record?.outcome ?? '');
-  if (!canAccessOwnerRecord(decisionFixtures[id])) return <Screen><DemoBanner /><Text style={{ color: c.ink }}>この画面は表示できません。</Text></Screen>;
+  if (!canAccessOwnerRecord(fixture)) return <Screen><DemoBanner /><Text style={{ color: c.ink }}>この画面は表示できません。</Text></Screen>;
   if (!record?.finalChoice) return <Screen><DemoBanner /><Text style={{ color: c.ink }}>先に最終決断を記録してください。</Text></Screen>;
   return <Screen scroll>
     <DemoBanner />

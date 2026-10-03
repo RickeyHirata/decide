@@ -9,15 +9,16 @@ import { DemoBanner, PrimaryButton, Screen, usePalette } from '../../src/ui';
 export default function Decision() {
   const c = usePalette();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const fixture = id ? decisionFixtures[id] : undefined;
+  const fixtureSource = id ? decisionFixtures[id] : undefined;
   const { state, dispatch } = useDemoState();
+  const fixture = fixtureSource && state.postStates[fixtureSource.id] === 'closed' ? { ...fixtureSource, phase: 'closed' as const } : fixtureSource;
   const demoNow = id ? demoNowForDecision(state, id) : '';
   const projection = projectDecision(fixture, state, demoNow);
   const [choice, setChoice] = useState<'A' | 'B' | null>(projection.ballot?.choice ?? null);
   const [error, setError] = useState(false);
   useEffect(() => setChoice(projection.ballot?.choice ?? null), [id, projection.ballot?.choice]);
 
-  if (!fixture || !projection.allowed) return <Screen><DemoBanner /><Text style={[styles.title, { color: c.ink }]}>この相談は表示できません</Text><Text style={{ color: c.muted }}>無効・削除・権限不足の詳細は表示しません。</Text></Screen>;
+  if (!fixture || !projection.allowed || state.postStates[fixture.id] === 'deleted') return <Screen><DemoBanner /><Text style={[styles.title, { color: c.ink }]}>この相談は表示できません</Text><Text style={{ color: c.muted }}>無効・削除・権限不足の詳細は表示しません。</Text></Screen>;
   const currentFixture = fixture;
   const record = state.decisions[currentFixture.id];
 
@@ -38,6 +39,8 @@ export default function Decision() {
     <DemoBanner />
     <Text style={{ fontSize: 14, color: c.muted }}>{fixture.role === 'owner' ? 'あなたの相談' : 'ミナ'} ・ {fixture.phase === 'open' ? '受付中' : '受付終了'} ・ {projection.ballot ? projection.canChange ? '変更可能' : '確定済み' : '未投票'}</Text>
     <Text style={[styles.title, { color: c.ink }]}>{demoDecision.question}</Text>
+    <Text style={{ color: c.muted }}>カテゴリ：{state.categories[fixture.id] ?? 'その他'}</Text>
+    {(state.addenda[fixture.id] ?? []).map((item, index) => <Text key={`${index}-${item}`} style={{ color: c.ink, marginTop: 8 }}>追記：{item}</Text>)}
     <View style={styles.pair}>{demoDecision.options.map((option, index) => <Pressable key={option.choice} accessibilityRole="button" accessibilityState={{ selected: choice === option.choice, disabled: !(projection.canVote || projection.canChange) }} disabled={!(projection.canVote || projection.canChange)} onPress={() => setChoice(option.choice)} style={[styles.option, { backgroundColor: index ? c.lilac : c.lime, borderColor: c.ink }, choice === option.choice && styles.selected]}><Text style={{ color: c.ink, fontSize: 18, lineHeight: 27, fontWeight: '700' }}>{option.choice}{choice === option.choice ? '　✓' : ''}{'\n'}{option.label}</Text></Pressable>)}</View>
 
     {fixture.role === 'owner' && fixture.phase === 'open' ? <Text style={[styles.note, { color: c.muted }]}>投稿者には受付終了まで途中集計を表示しません。</Text> : null}
@@ -52,8 +55,9 @@ export default function Decision() {
     {projection.canDecide && !record?.finalChoice ? <PrimaryButton label="決断を記録する" onPress={() => router.push(`/decision/${fixture.id}/decide`)} /> : null}
 
     <View style={[styles.links, { borderColor: c.line }]}>
-      {projection.result && fixture.role === 'voter' ? <Link href="/sheet/o04" style={{ color: c.ink }}>ひとことを書く</Link> : null}
-      {fixture.role === 'owner' ? <Link href="/sheet/o05" style={{ color: c.ink }}>投稿メニュー</Link> : null}
+      {projection.result && fixture.role === 'voter' ? <Link href={{ pathname: '/sheet/o04', params: { decisionId: fixture.id } }} style={{ color: c.ink }}>ひとことを書く</Link> : null}
+      {state.notes[fixture.id] ? <Text style={{ color: c.muted }}>自分のひとこと：{state.notes[fixture.id]}</Text> : null}
+      {fixture.role === 'owner' ? <><Link href={{ pathname: '/sheet/o05', params: { decisionId: fixture.id } }} style={{ color: c.ink }}>投稿メニュー</Link><Link href={{ pathname: '/sheet/o06', params: { decisionId: fixture.id } }} style={{ color: c.ink }}>回答者</Link></> : null}
       {record?.finalChoice ? <><Text style={{ color: c.ink, fontWeight: '700' }}>本人の決断：{record.finalChoice}</Text>{record.outcome ? <Text style={{ color: c.ink }}>その後：{record.outcome}</Text> : null}<Link href={`/decision/${fixture.id}/outcome`} style={{ color: c.ink }}>その後を追加・編集</Link><Link href={`/decision/${fixture.id}/review`} style={{ color: c.ink }}>振り返る</Link></> : null}
       {record?.finalPending ? <Text style={{ color: c.muted }}>まだ決めていないため、最終決断は記録されていません。</Text> : null}
     </View>

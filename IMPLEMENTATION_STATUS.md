@@ -47,8 +47,8 @@ Dependency resolution, app TypeScript configuration, and Web build repaired; see
 | S14–S19 | Implemented own/public profiles, month/category history, detail/share projection, and staged DNA. | Profile theme editor depth and every DNA unlock tier remain. |
 | S20–S28 | Implemented friends/requests/QR, profile/notification/privacy/block/account settings, and support forms. | Camera QR, individual block removal, account reauthentication, appeal variants, and complete field validation remain. |
 | W01–W03 | W01 retained; implemented continuation and indistinguishable unavailable Web pages. | Browser E2E and guest claim integration are later milestones. |
-| A01–A02 | Listed only in the M0 catalog and intentionally excluded from general navigation. | Staff-only interactive fixture surfaces still remain for M0; real MFA/authorization is M4. |
-| O01–O10 | O02/O03/O07/O10 have confirm/cancel local-state demos. Other sheets are visibly marked incomplete. | O01/O04/O05/O06/O08/O09 implementation, O02 date validation, O03 search, and further origin-screen integration remain. |
+| A01–A02 | Implemented staff-only local list/detail fixtures outside general navigation, including empty/error and guarded local decisions. | Revision-drift/audit-history fixture depth remains; real MFA/authorization/audit logging is M4. |
+| O01–O10 | All ten have role/state-aware local surfaces; O01/O02/O03/O04/O05/O07/O08/O09/O10 commit scoped state only on confirm and O06 has ready/empty/error states. | Rendered focus/keyboard checks, real media crop, O03 search depth, and production adapters remain. |
 
 The M0 catalog is a traceability and navigation aid, not evidence that listed-only staff screens or shallow generic controls are complete. M0 remains **in progress**.
 
@@ -150,3 +150,43 @@ M0 remains **in progress**.
 1. Automate the interaction checklist with a rendered Expo navigation harness.
 2. Complete O01/O04/O05/O06/O08/O09 and staff A01/A02 fixtures.
 3. Perform and record the device/browser accessibility and responsive matrix.
+
+## 2026-10-03 PR #4 M0 sheet and staff fixture pass
+
+M0 remains **in progress**. The following implementations are local, deterministic fixtures and do not represent production authorization or external side effects.
+
+- O01 now selects/removes a marked demo photo per A/B and commits a normalized crop center; cancel leaves the committed photo state unchanged.
+- O04 is available only to a voter whose projected result is visible, validates an 80-character local note, and restores the committed note on reopen.
+- O05 is owner-only and appends immutable local addenda; it links to the role-guarded category and destructive-operation sheets.
+- O06 is owner-only and provides named respondent ready/empty/error/retry fixtures. It does not appear for voters and does not claim live identities.
+- O08 is owner-only, requires an explicit close/delete selection and impact copy, and changes only local post state. Deletion produces the common unavailable detail without deleting external data.
+- O09 is owner-only, selects one of the fixed 11 categories and reflects the committed value on the decision detail.
+- A01/A02 now have non-navigation staff fixture routes at `/admin/moderation` and `/admin/moderation/[id]`. The list supports ready/empty/error/retry; details reject unknown IDs, require an explicit local decision plus note, and state clearly that staff auth, MFA, audit logging, publication and deletion are not connected.
+
+### Verification performed in this pass
+
+- `npx expo export --platform ios --output-dir /tmp/decide-expo-export` — passed; Metro bundled 1,138 modules and produced an iOS Hermes bundle. This proves route/module bundling only, not rendered interaction or native behavior.
+- `npm run typecheck` — passed.
+- `npm run test:unit` — passed: 66/66, including scoped sheet state and known/unknown moderation case transitions.
+- `npm run build:web` — passed.
+- `git diff --check` — passed.
+
+The requested B→Review/history, five-minute control, O07 second denial, cancel/reopen, share persistence and route guards remain covered by shared reducer/projection tests and the reproducible checklist above, but **were not executed in a rendered Expo UI**. No simulator, browser-capable Expo target, React Native rendering test dependency, screen reader or physical device is available in this environment. The iOS export must not be treated as those checks passing.
+
+### Responsive and accessibility matrix
+
+| Check | Result |
+|---|---|
+| iOS production bundle / route inclusion | Passed via Expo export |
+| 320 / 390 / 414 rendered widths | Not run |
+| Light / dark rendered inspection | Not run |
+| 200% dynamic type | Not run |
+| Keyboard avoidance and focus return | Not run |
+| Safe areas | Not run |
+| VoiceOver / TalkBack | Not run |
+
+### Remaining M0 work
+
+1. Add a supported rendered React Native navigation test harness and automate the documented multi-screen flows, including sheet focus return and cancellation.
+2. Execute the responsive/accessibility matrix on simulator/device and correct discovered issues.
+3. Expand A01/A02 fixture states for revision drift and audit-history display; real staff authorization remains M4.

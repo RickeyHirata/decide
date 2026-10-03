@@ -104,3 +104,24 @@ test('sheet draft cancellation leaves committed deadline unchanged', () => {
   assert.equal(draftDeadline, '1時間');
   assert.equal(initialDemoState.settings.voteDeadline, '3時間');
 });
+
+test('remaining sheet actions commit only their scoped local records', () => {
+  const photo = demoReducer(initialDemoState, { type: 'set-photo-draft', option: 'A', selected: true, cropX: 0.25, cropY: 0.25 });
+  const note = demoReducer(photo, { type: 'save-note', decisionId: 'demo-coat-locked', text: 'Bがよさそう' });
+  const addendum = demoReducer(note, { type: 'append-addendum', decisionId: 'demo-owner-open', text: '雨の場合も考えたい' });
+  const category = demoReducer(addendum, { type: 'set-category', decisionId: 'demo-owner-open', category: '旅行' });
+  const closed = demoReducer(category, { type: 'set-post-state', decisionId: 'demo-owner-open', state: 'closed' });
+  assert.deepEqual(closed.photoDrafts.A, { selected: true, cropX: 0.25, cropY: 0.25 });
+  assert.equal(closed.notes['demo-coat-locked'], 'Bがよさそう');
+  assert.deepEqual(closed.addenda['demo-owner-open'], ['雨の場合も考えたい']);
+  assert.equal(closed.categories['demo-owner-open'], '旅行');
+  assert.equal(closed.postStates['demo-owner-open'], 'closed');
+  assert.equal(initialDemoState.notes['demo-coat-locked'], undefined);
+});
+
+test('staff fixture decisions update known cases and reject unknown cases', () => {
+  const decided = demoReducer(initialDemoState, { type: 'moderate-case', caseId: 'demo-held', status: 'allowed', note: 'fixture確認済み' });
+  assert.deepEqual(decided.moderationCases['demo-held'], { status: 'allowed', note: 'fixture確認済み' });
+  const unknown = demoReducer(decided, { type: 'moderate-case', caseId: 'missing', status: 'removed', note: 'no' });
+  assert.equal(unknown, decided);
+});

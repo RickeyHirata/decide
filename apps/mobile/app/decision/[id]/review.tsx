@@ -9,10 +9,12 @@ export default function Review() {
   const c = usePalette();
   const { id = 'demo-owner-closed' } = useLocalSearchParams<{ id: string }>();
   const { state, dispatch } = useDemoState();
+  const sourceFixture = decisionFixtures[id];
+  const fixture = sourceFixture && state.postStates[id] === 'closed' ? { ...sourceFixture, phase: 'closed' as const } : sourceFixture;
   const record = state.decisions[id];
   const [score, setScore] = useState<number | null>(record?.review.score ?? null);
   const [memo, setMemo] = useState(record?.review.memo ?? '');
-  if (!canAccessOwnerRecord(decisionFixtures[id])) return <Screen><DemoBanner /><Text style={{ color: c.ink }}>この画面は表示できません。</Text></Screen>;
+  if (!canAccessOwnerRecord(fixture)) return <Screen><DemoBanner /><Text style={{ color: c.ink }}>この画面は表示できません。</Text></Screen>;
   if (!record?.finalChoice) return <Screen><DemoBanner /><Text style={{ color: c.ink }}>最終決断がないため振り返りは保存できません。</Text></Screen>;
 
   return <Screen scroll>

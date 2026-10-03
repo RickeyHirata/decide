@@ -9,7 +9,8 @@ export default function Decide() {
   const c = usePalette();
   const { id = 'demo-owner-closed' } = useLocalSearchParams<{ id: string }>();
   const { state, dispatch } = useDemoState();
-  const fixture = decisionFixtures[id];
+  const sourceFixture = decisionFixtures[id];
+  const fixture = sourceFixture && state.postStates[id] === 'closed' ? { ...sourceFixture, phase: 'closed' as const } : sourceFixture;
   const record = state.decisions[id];
   const [choice, setChoice] = useState<FinalChoice | 'undecided' | null>(record?.finalChoice ?? null);
 

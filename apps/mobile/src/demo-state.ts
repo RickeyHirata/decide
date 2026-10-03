@@ -32,6 +32,12 @@ export type DemoState = {
   decisions: Record<string, DecisionRecord>;
   ballots: Record<string, DemoBallot>;
   clockOffsetsMs: Record<string, number>;
+  notes: Record<string, string>;
+  addenda: Record<string, string[]>;
+  categories: Record<string, string>;
+  postStates: Record<string, 'open' | 'closed' | 'deleted'>;
+  photoDrafts: Record<'A' | 'B', { selected: boolean; cropX: number; cropY: number }>;
+  moderationCases: Record<string, { status: 'held' | 'reported' | 'appealed' | 'allowed' | 'removed'; note: string }>;
   unresolvedActions: number;
   settings: {
     voteDeadline: string;
@@ -55,7 +61,13 @@ export type DemoAction =
   | { type: 'advance-clock'; decisionId: string; milliseconds: number }
   | { type: 'set-deadline'; value: string; customAt?: string }
   | { type: 'set-friends'; ids: string[] }
-  | { type: 'set-share'; decisionId: string; scope: ShareScope };
+  | { type: 'set-share'; decisionId: string; scope: ShareScope }
+  | { type: 'save-note'; decisionId: string; text: string }
+  | { type: 'append-addendum'; decisionId: string; text: string }
+  | { type: 'set-category'; decisionId: string; category: string }
+  | { type: 'set-post-state'; decisionId: string; state: 'closed' | 'deleted' }
+  | { type: 'set-photo-draft'; option: 'A' | 'B'; selected: boolean; cropX: number; cropY: number }
+  | { type: 'moderate-case'; caseId: string; status: 'allowed' | 'held' | 'removed'; note: string };
 
 export const emptyDecisionRecord = (): DecisionRecord => ({
   finalChoice: null,
@@ -72,6 +84,16 @@ export const initialDemoState: DemoState = {
     'demo-coat-locked': { choice: 'B', firstAt: '2026-10-01T08:50:00.000Z', mutableUntil: '2026-10-01T08:55:00.000Z', changes: 0, lockedAt: '2026-10-01T08:55:00.000Z' },
   },
   clockOffsetsMs: {},
+  notes: {},
+  addenda: {},
+  categories: { 'demo-owner-open': 'ファッション', 'demo-owner-closed': 'ファッション' },
+  postStates: {},
+  photoDrafts: { A: { selected: false, cropX: 0.5, cropY: 0.5 }, B: { selected: false, cropX: 0.5, cropY: 0.5 } },
+  moderationCases: {
+    'demo-held': { status: 'held', note: '' },
+    'demo-reported': { status: 'reported', note: '' },
+    'demo-appealed': { status: 'appealed', note: '' },
+  },
   unresolvedActions: 1,
   settings: {
     voteDeadline: '3時間',
@@ -149,6 +171,21 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
       return action.ids.length ? { ...state, settings: { ...state.settings, friendIds: action.ids } } : state;
     case 'set-share':
       return updateDecision(state, action.decisionId, (record) => ({ ...record, shareScope: action.scope }));
+    case 'save-note':
+      return action.text.length <= 80 ? { ...state, notes: { ...state.notes, [action.decisionId]: action.text } } : state;
+    case 'append-addendum':
+      return action.text.trim() && action.text.length <= 300 ? { ...state, addenda: { ...state.addenda, [action.decisionId]: [...(state.addenda[action.decisionId] ?? []), action.text] } } : state;
+    case 'set-category':
+      return { ...state, categories: { ...state.categories, [action.decisionId]: action.category } };
+    case 'set-post-state':
+      return { ...state, postStates: { ...state.postStates, [action.decisionId]: action.state } };
+    case 'set-photo-draft':
+      return { ...state, photoDrafts: { ...state.photoDrafts, [action.option]: { selected: action.selected, cropX: action.cropX, cropY: action.cropY } } };
+    case 'moderate-case': {
+      const item = state.moderationCases[action.caseId];
+      if (!item) return state;
+      return { ...state, moderationCases: { ...state.moderationCases, [action.caseId]: { status: action.status, note: action.note } } };
+    }
   }
 }
 
