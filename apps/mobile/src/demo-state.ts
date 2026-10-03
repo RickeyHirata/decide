@@ -31,6 +31,7 @@ export type DemoBallot = {
 export type DemoState = {
   decisions: Record<string, DecisionRecord>;
   ballots: Record<string, DemoBallot>;
+  clockOffsetsMs: Record<string, number>;
   unresolvedActions: number;
   settings: {
     voteDeadline: string;
@@ -51,6 +52,7 @@ export type DemoAction =
   | { type: 'cast-vote'; decisionId: string; choice: BallotChoice; now: string }
   | { type: 'change-vote'; decisionId: string; choice: BallotChoice; now: string }
   | { type: 'lock-vote'; decisionId: string; now: string }
+  | { type: 'advance-clock'; decisionId: string; milliseconds: number }
   | { type: 'set-deadline'; value: string; customAt?: string }
   | { type: 'set-friends'; ids: string[] }
   | { type: 'set-share'; decisionId: string; scope: ShareScope };
@@ -69,6 +71,7 @@ export const initialDemoState: DemoState = {
     'demo-coat-mutable': { choice: 'A', firstAt: '2026-10-01T08:58:00.000Z', mutableUntil: '2026-10-01T09:03:00.000Z', changes: 0, lockedAt: null },
     'demo-coat-locked': { choice: 'B', firstAt: '2026-10-01T08:50:00.000Z', mutableUntil: '2026-10-01T08:55:00.000Z', changes: 0, lockedAt: '2026-10-01T08:55:00.000Z' },
   },
+  clockOffsetsMs: {},
   unresolvedActions: 1,
   settings: {
     voteDeadline: '3時間',
@@ -137,6 +140,8 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
       if (!ballot || ballot.lockedAt) return state;
       return { ...state, ballots: { ...state.ballots, [action.decisionId]: { ...ballot, lockedAt: action.now } } };
     }
+    case 'advance-clock':
+      return { ...state, clockOffsetsMs: { ...state.clockOffsetsMs, [action.decisionId]: (state.clockOffsetsMs[action.decisionId] ?? 0) + Math.max(0, action.milliseconds) } };
     case 'set-deadline':
       if (action.value === '日時指定' && (!action.customAt || !isFutureIso(action.customAt))) return state;
       return { ...state, settings: { ...state.settings, voteDeadline: action.value, customVoteDeadline: action.customAt ?? state.settings.customVoteDeadline } };
@@ -151,17 +156,19 @@ export type DecisionFixture = {
   id: string;
   role: 'owner' | 'voter';
   phase: 'open' | 'closed';
+  endsAt: string;
   initialBallot?: DemoBallot;
   votes?: { A: number; B: number };
 };
 
 const mutableAt = '2026-10-01T08:58:00.000Z';
 export const decisionFixtures: Record<string, DecisionFixture> = {
-  'demo-coat': { id: 'demo-coat', role: 'voter', phase: 'open' },
-  'demo-coat-mutable': { id: 'demo-coat-mutable', role: 'voter', phase: 'open', initialBallot: { choice: 'A', firstAt: mutableAt, mutableUntil: '2026-10-01T09:03:00.000Z', changes: 0, lockedAt: null }, votes: { A: 6, B: 4 } },
-  'demo-coat-locked': { id: 'demo-coat-locked', role: 'voter', phase: 'open', initialBallot: { choice: 'B', firstAt: '2026-10-01T08:50:00.000Z', mutableUntil: '2026-10-01T08:55:00.000Z', changes: 0, lockedAt: '2026-10-01T08:55:00.000Z' }, votes: { A: 6, B: 4 } },
-  'demo-owner-open': { id: 'demo-owner-open', role: 'owner', phase: 'open' },
-  'demo-owner-closed': { id: 'demo-owner-closed', role: 'owner', phase: 'closed', votes: { A: 5, B: 5 } },
+  'demo-coat': { id: 'demo-coat', role: 'voter', phase: 'open', endsAt: '2026-10-01T12:00:00.000Z', votes: { A: 6, B: 4 } },
+  'demo-coat-mutable': { id: 'demo-coat-mutable', role: 'voter', phase: 'open', endsAt: '2026-10-01T12:00:00.000Z', initialBallot: { choice: 'A', firstAt: mutableAt, mutableUntil: '2026-10-01T09:03:00.000Z', changes: 0, lockedAt: null }, votes: { A: 6, B: 4 } },
+  'demo-coat-locked': { id: 'demo-coat-locked', role: 'voter', phase: 'open', endsAt: '2026-10-01T12:00:00.000Z', initialBallot: { choice: 'B', firstAt: '2026-10-01T08:50:00.000Z', mutableUntil: '2026-10-01T08:55:00.000Z', changes: 0, lockedAt: '2026-10-01T08:55:00.000Z' }, votes: { A: 6, B: 4 } },
+  'demo-coat-closed-unvoted': { id: 'demo-coat-closed-unvoted', role: 'voter', phase: 'closed', endsAt: '2026-10-01T08:59:00.000Z', votes: { A: 6, B: 4 } },
+  'demo-owner-open': { id: 'demo-owner-open', role: 'owner', phase: 'open', endsAt: '2026-10-01T12:00:00.000Z' },
+  'demo-owner-closed': { id: 'demo-owner-closed', role: 'owner', phase: 'closed', endsAt: '2026-10-01T08:59:00.000Z', votes: { A: 5, B: 5 } },
 };
 
 export type DecisionProjection = {
@@ -176,12 +183,22 @@ export type DecisionProjection = {
 export function projectDecision(fixture: DecisionFixture | undefined, state: DemoState, now = DEMO_NOW): DecisionProjection {
   if (!fixture) return { allowed: false, canVote: false, canChange: false, canDecide: false, ballot: null, result: null };
   const ballot = state.ballots[fixture.id] ?? fixture.initialBallot ?? null;
+  const closed = fixture.phase === 'closed' || Date.parse(now) >= Date.parse(fixture.endsAt);
   const timeLocked = ballot ? Date.parse(now) >= Date.parse(ballot.mutableUntil) : false;
-  const locked = Boolean(ballot && (ballot.lockedAt || timeLocked || fixture.phase === 'closed'));
-  const canVote = fixture.role === 'voter' && fixture.phase === 'open' && !ballot;
-  const canChange = fixture.role === 'voter' && fixture.phase === 'open' && Boolean(ballot) && !locked && ballot!.changes === 0;
-  const canSeeResult = fixture.phase === 'closed' || (fixture.role === 'voter' && locked);
-  return { allowed: true, canVote, canChange, canDecide: fixture.role === 'owner' && fixture.phase === 'closed', ballot, result: canSeeResult && fixture.votes ? resultPercent(fixture.votes) : canSeeResult && ballot ? resultPercent({ A: ballot.choice === 'A' ? 7 : 6, B: ballot.choice === 'B' ? 4 : 3 }) : null };
+  const locked = Boolean(ballot && (ballot.lockedAt || timeLocked || closed));
+  const canVote = fixture.role === 'voter' && !closed && !ballot;
+  const canChange = fixture.role === 'voter' && !closed && Boolean(ballot) && !locked && ballot!.changes === 0;
+  const canSeeResult = (fixture.role === 'owner' && closed) || (fixture.role === 'voter' && Boolean(ballot) && locked);
+  return { allowed: true, canVote, canChange, canDecide: fixture.role === 'owner' && closed, ballot, result: canSeeResult && fixture.votes ? resultPercent(fixture.votes) : null };
+}
+
+export function demoNowForDecision(state: DemoState, decisionId: string) {
+  return new Date(Date.parse(DEMO_NOW) + (state.clockOffsetsMs[decisionId] ?? 0)).toISOString();
+}
+
+export function canConfirmVoteChange(fixture: DecisionFixture | undefined, state: DemoState, now: string, choice: string | undefined) {
+  const projection = projectDecision(fixture, state, now);
+  return Boolean(choice && (choice === 'A' || choice === 'B') && projection.canChange && projection.ballot && projection.ballot.choice !== choice);
 }
 
 export function canAccessOwnerRecord(fixture: DecisionFixture | undefined) {

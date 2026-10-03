@@ -116,6 +116,37 @@ M0 remains **in progress**. No real authentication, ballot, report, persistence,
 
 ### Remaining M0 work
 
-1. Add rendered Expo route tests around projection/action wiring, including advancing the demo clock from mutable to locked on-screen.
+1. Add rendered Expo route tests around projection/action wiring; the on-screen per-decision clock control is implemented but has not been exercised in a native renderer here.
 2. Complete the previously listed unfinished sheets and staff fixtures.
 3. Run the 320/390/414, light/dark, 200% text, screen-reader, keyboard and safe-area matrix on actual targets.
+
+## 2026-10-02 PR #4 third review corrections
+
+M0 remains **in progress**.
+
+- Each decision now has an independent demo-clock offset. After casting on `/decision/demo-coat`, the visible “この相談のデモ時刻を5分進める” action advances only that decision, recomputes the projection, locks at the exact boundary and reveals fixture-derived results. Deterministic time injection remains available to unit tests.
+- Closing is derived from either fixture phase or `endsAt`. A closed unvoted voter still receives no result; a voter with a ballot is locked at the deadline and may receive the result. Open-owner result withholding remains unchanged.
+- O07 now validates its `decisionId`, requested choice, role, phase, deadline, mutable window and current choice through the same projection used by the detail screen. Invalid/direct/expired requests show an unavailable explanation and a disabled action instead of a false confirmation.
+- O02/O10 custom timestamps remain editable, future-validated, and return through the supplied origin route parameters. Provider state retains confirmed values; cancel retains only the previous committed value.
+
+### Reproducible local interaction checklist (not executed in a native renderer here)
+
+1. Open `/decision/demo-coat`, choose A and submit. Confirm no result is shown and the five-minute explanation/control appears. Tap the clock control; confirm the result appears and the vote controls disappear.
+2. Open `/decision/demo-coat-mutable`, choose B, confirm O07, then reopen/direct-link O07. Confirm the second request is unavailable. Direct-link O07 with `demo-owner-open` must also be unavailable.
+3. Open `/decision/demo-owner-closed/decide`, choose B, save, then open Review and history. Confirm B is shown in both. Voter/open-owner IDs must be rejected by owner-only routes.
+4. Save `friends` on `/history/demo-desk/share`, leave and reopen; confirm the committed value remains `friends` while `/history/demo-trip/share` remains independently `self`.
+5. From compose confirmation, choose O02 custom time, enter a future value, confirm, and verify the question/A/B/context and deadline remain on the confirmation screen. A past/invalid timestamp keeps confirm disabled.
+
+### Checks for the third correction
+
+- `npm run typecheck` — passed.
+- `npm run test:unit` — passed: 64/64. Added coverage for independent clock advancement, exact rendered-projection transition, deadline locking, closed-unvoted non-disclosure, O07 guards and share-scope remount reads.
+- `npm run build:web` — passed.
+- `git diff --check` — passed.
+- The checklist above is reproducible but was not executed in an Expo native renderer in this environment. Real device/browser sizes, dark/light visual inspection, 200% text, screen readers, keyboard and safe areas remain unverified.
+
+### Remaining M0 work
+
+1. Automate the interaction checklist with a rendered Expo navigation harness.
+2. Complete O01/O04/O05/O06/O08/O09 and staff A01/A02 fixtures.
+3. Perform and record the device/browser accessibility and responsive matrix.

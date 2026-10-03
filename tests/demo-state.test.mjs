@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canAccessOwnerRecord, decisionFixtures, demoReducer, historyFixtures, initialDemoState, projectDecision } from '../apps/mobile/src/demo-state.ts';
+import { canAccessOwnerRecord, canConfirmVoteChange, decisionFixtures, demoNowForDecision, demoReducer, historyFixtures, initialDemoState, projectDecision } from '../apps/mobile/src/demo-state.ts';
 
 test('first ballot stays mutable and hides results for five minutes', () => {
   const voted = demoReducer(initialDemoState, { type: 'cast-vote', decisionId: 'demo-coat', choice: 'A', now: '2026-10-01T09:00:00.000Z' });
@@ -32,6 +32,32 @@ test('owner and unvoted voter projections never expose open results', () => {
   assert.equal(projectDecision(decisionFixtures['demo-owner-open'], initialDemoState).result, null);
   assert.equal(projectDecision(decisionFixtures['demo-coat'], initialDemoState).result, null);
   assert.equal(projectDecision(undefined, initialDemoState).allowed, false);
+  assert.equal(projectDecision(decisionFixtures['demo-coat-closed-unvoted'], initialDemoState).result, null);
+});
+
+test('per-decision demo clock advances rendering projection without affecting another decision', () => {
+  const voted = demoReducer(initialDemoState, { type: 'cast-vote', decisionId: 'demo-coat', choice: 'A', now: demoNowForDecision(initialDemoState, 'demo-coat') });
+  const advanced = demoReducer(voted, { type: 'advance-clock', decisionId: 'demo-coat', milliseconds: 5 * 60 * 1000 });
+  assert.equal(demoNowForDecision(advanced, 'demo-coat'), '2026-10-01T09:05:00.000Z');
+  assert.equal(demoNowForDecision(advanced, 'demo-coat-mutable'), '2026-10-01T09:00:00.000Z');
+  assert.equal(projectDecision(decisionFixtures['demo-coat'], advanced, demoNowForDecision(advanced, 'demo-coat')).canChange, false);
+  assert.ok(projectDecision(decisionFixtures['demo-coat'], advanced, demoNowForDecision(advanced, 'demo-coat')).result);
+});
+
+test('poll deadline locks an existing ballot and does not reveal to an unvoted voter', () => {
+  const voted = demoReducer(initialDemoState, { type: 'cast-vote', decisionId: 'demo-coat', choice: 'B', now: '2026-10-01T09:00:00.000Z' });
+  const afterDeadline = projectDecision(decisionFixtures['demo-coat'], voted, '2026-10-01T12:00:00.000Z');
+  assert.equal(afterDeadline.canChange, false);
+  assert.ok(afterDeadline.result);
+  assert.equal(projectDecision(decisionFixtures['demo-coat-closed-unvoted'], initialDemoState, '2026-10-01T12:00:00.000Z').result, null);
+});
+
+test('O07 guard rejects direct, owner, expired, and same-choice requests', () => {
+  assert.equal(canConfirmVoteChange(undefined, initialDemoState, '2026-10-01T09:00:00.000Z', 'B'), false);
+  assert.equal(canConfirmVoteChange(decisionFixtures['demo-owner-open'], initialDemoState, '2026-10-01T09:00:00.000Z', 'B'), false);
+  assert.equal(canConfirmVoteChange(decisionFixtures['demo-coat-mutable'], initialDemoState, '2026-10-01T09:03:00.000Z', 'B'), false);
+  assert.equal(canConfirmVoteChange(decisionFixtures['demo-coat-mutable'], initialDemoState, '2026-10-01T09:00:00.000Z', 'A'), false);
+  assert.equal(canConfirmVoteChange(decisionFixtures['demo-coat-mutable'], initialDemoState, '2026-10-01T09:00:00.000Z', 'B'), true);
 });
 
 test('owner-only direct routes require a closed owner fixture', () => {
@@ -57,6 +83,13 @@ test('history fixtures project distinct content and reject unknown ids', () => {
   assert.equal(historyFixtures['demo-trip'].category, '旅行');
   assert.notEqual(historyFixtures['demo-desk'].date, historyFixtures['demo-trip'].date);
   assert.equal(historyFixtures['missing'], undefined);
+});
+
+test('history share scope is stored per id and survives screen remount state reads', () => {
+  const desk = demoReducer(initialDemoState, { type: 'set-share', decisionId: 'demo-desk', scope: 'friends' });
+  const trip = demoReducer(desk, { type: 'set-share', decisionId: 'demo-trip', scope: 'public' });
+  assert.equal(trip.decisions['demo-desk'].shareScope, 'friends');
+  assert.equal(trip.decisions['demo-trip'].shareScope, 'public');
 });
 
 test('custom deadlines require deterministic future times', () => {

@@ -2,7 +2,7 @@ import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useDemoState } from '../../src/demo-context';
-import { decisionFixtures, DEMO_NOW, projectDecision } from '../../src/demo-state';
+import { decisionFixtures, demoNowForDecision, projectDecision } from '../../src/demo-state';
 import { demoDecision } from '../../src/demo';
 import { DemoBanner, PrimaryButton, Screen, usePalette } from '../../src/ui';
 
@@ -11,7 +11,8 @@ export default function Decision() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const fixture = id ? decisionFixtures[id] : undefined;
   const { state, dispatch } = useDemoState();
-  const projection = projectDecision(fixture, state, DEMO_NOW);
+  const demoNow = id ? demoNowForDecision(state, id) : '';
+  const projection = projectDecision(fixture, state, demoNow);
   const [choice, setChoice] = useState<'A' | 'B' | null>(projection.ballot?.choice ?? null);
   const [error, setError] = useState(false);
   useEffect(() => setChoice(projection.ballot?.choice ?? null), [id, projection.ballot?.choice]);
@@ -23,11 +24,11 @@ export default function Decision() {
   function submitVote() {
     if (!choice) return;
     if (!projection.ballot) {
-      dispatch({ type: 'cast-vote', decisionId: currentFixture.id, choice, now: DEMO_NOW });
+      dispatch({ type: 'cast-vote', decisionId: currentFixture.id, choice, now: demoNow });
       return;
     }
     if (choice === projection.ballot.choice) {
-      dispatch({ type: 'lock-vote', decisionId: currentFixture.id, now: DEMO_NOW });
+      dispatch({ type: 'lock-vote', decisionId: currentFixture.id, now: demoNow });
       return;
     }
     router.push({ pathname: '/sheet/o07', params: { returnTo: `/decision/${currentFixture.id}`, decisionId: currentFixture.id, choice } });
@@ -41,6 +42,7 @@ export default function Decision() {
 
     {fixture.role === 'owner' && fixture.phase === 'open' ? <Text style={[styles.note, { color: c.muted }]}>投稿者には受付終了まで途中集計を表示しません。</Text> : null}
     {projection.canChange ? <Text style={[styles.note, { color: c.muted }]}>最初の投票から5分間は結果を表示しません。選択変更は1回だけで、変更または即時確定後は固定されます。</Text> : null}
+    {projection.canChange ? <Pressable accessibilityRole="button" onPress={() => dispatch({ type: 'advance-clock', decisionId: fixture.id, milliseconds: 5 * 60 * 1000 })} style={styles.clock}><Text style={{ color: c.ink, fontWeight: '700' }}>この相談のデモ時刻を5分進める</Text><Text style={{ color: c.muted, fontSize: 12 }}>現在 {demoNow}</Text></Pressable> : null}
     {projection.result ? <View style={[styles.result, { borderColor: c.line }]}><Text style={{ fontSize: 20, fontWeight: '700', color: c.ink }}>{projection.result.A === projection.result.B ? '最終結果　同数' : `結果　A ${projection.result.A}% / B ${projection.result.B}%`}</Text><Text style={{ color: c.muted }}>{projection.result.total}票（ローカルfixture）</Text></View> : null}
     {error ? <Text accessibilityRole="alert" style={{ color: c.danger }}>接続エラーの見本です。選択内容は保持しています。</Text> : null}
 
@@ -59,5 +61,5 @@ export default function Decision() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 25, lineHeight: 35, fontWeight: '800', marginTop: 8 }, pair: { flexDirection: 'row', gap: 6, marginTop: 22 }, option: { flex: 1, minHeight: 180, borderRadius: 18, padding: 16, borderWidth: 0 }, selected: { borderWidth: 3 }, note: { fontSize: 12, lineHeight: 18, marginTop: 14 }, result: { borderTopWidth: 1, borderBottomWidth: 1, paddingVertical: 18, marginTop: 18 }, secondary: { minHeight: 44, alignItems: 'center', justifyContent: 'center' }, links: { borderTopWidth: 1, marginTop: 20, paddingTop: 18, gap: 20 },
+  title: { fontSize: 25, lineHeight: 35, fontWeight: '800', marginTop: 8 }, pair: { flexDirection: 'row', gap: 6, marginTop: 22 }, option: { flex: 1, minHeight: 180, borderRadius: 18, padding: 16, borderWidth: 0 }, selected: { borderWidth: 3 }, note: { fontSize: 12, lineHeight: 18, marginTop: 14 }, clock: { minHeight: 52, padding: 12, marginTop: 10, borderWidth: 1, borderRadius: 12, justifyContent: 'center' }, result: { borderTopWidth: 1, borderBottomWidth: 1, paddingVertical: 18, marginTop: 18 }, secondary: { minHeight: 44, alignItems: 'center', justifyContent: 'center' }, links: { borderTopWidth: 1, marginTop: 20, paddingTop: 18, gap: 20 },
 });
